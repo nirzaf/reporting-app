@@ -1,0 +1,19 @@
+CREATE PROCEDURE InsertSales
+	-- Add the parameters for the stored procedure here
+@SaleID int,
+@CarID int,
+@SalesDate DateTime
+AS
+BEGIN
+    IF EXISTS (SELECT COUNT(*) FROM [dbo].[Sales] WHERE SaleID = @SaleID)
+		BEGIN 
+			UPDATE [dbo].[Sales] SET [CarID] = @CarID, [SaleDate] = @SalesDate WHERE [SaleID] = @SaleID
+		END
+	ELSE
+		BEGIN
+			INSERT INTO [dbo].[Sales] ([SaleID],[CarID] ,[SaleDate]) 
+			VALUES (@SaleID, @CarID, @SalesDate)
+		END
+	SELECT SCOPE_IDENTITY() AS SalesID
+	END
+GO

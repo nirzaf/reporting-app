@@ -1,13 +1,18 @@
-import { AfterViewInit, Component, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild} from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
-import {MatTable, MatTableDataSource} from '@angular/material/table';
-import { WebService } from '../shared/web.service';
+import { MatTable, MatTableDataSource} from '@angular/material/table';
+import { HttpClient} from "@angular/common/http";
+import { environment } from "../../environments/environment";
+import { LogRegisterService } from '../shared/log-register.service';
+import {MatDialog} from "@angular/material/dialog";
+import {ItemsComponent} from "../items/items.component";
 
 export interface TableItem {
   Name : string;
   ItemCategory: string;
   DefaultPriceConcessionID: number;
+  DefaultPriceConcessionName: string;
 }
 
 @Component({
@@ -16,37 +21,48 @@ export interface TableItem {
   styleUrls: ['./table.component.scss']
 })
 
-export class TableComponent implements AfterViewInit {
+export class TableComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatTable) table!: MatTable<TableItem>;
-  //dataSource: TableDataSource;
-  itemData: TableItem[] = [];
-  source:any ;
-  /** Columns displayed in the table. Columns IDs can be added, removed, or reordered. */
-  displayedColumns = ['name', 'category', 'price'];
 
-  constructor(private webService: WebService) {
+  itemData: TableItem[]=[];
+  displayedColumns = ['name', 'category', 'price', 'action'];
+  dataSource = new MatTableDataSource<TableItem>(this.itemData);
+
+  constructor(private http:HttpClient,
+              private logger:LogRegisterService,
+              private dialog:MatDialog) {}
+  ngOnInit(): void {
     this.getItemDetails();
   }
 
   getItemDetails(){
-    this.webService.commonMethod('items/?fields=id,name,description,ItemCategory,DefaultPriceConcessionID,DefaultPriceConcessionName,active',
-      null, 'GET')
-      .subscribe( (data:any) => {
-        if(data.succeeded){
-          this.itemData = data.Data;
-          let i=0;
-          let items = data.data.map(function(a:any) {
-            a.select = false;
-            i++;
-            return a;
-          })
-          this.source = new MatTableDataSource<TableItem>(items);
+    let url = environment.baseUrl + 'items/?fields=id,name,description,ItemCategory,DefaultPriceConcessionID,DefaultPriceConcessionName,active';
+    this.logger.print("Get data url:" + url);
+    this.http.get(url)
+      .subscribe( (items:any) => {
+        this.dataSource.data = items.Data as TableItem[]
+        for(let c in this.dataSource.data) {
+          this.logger.print("Data Source:", this.dataSource.data[c]);
         }
-      })}
+      });
+  }
 
-  ngAfterViewInit(): void {
-    this.table.dataSource = this.source;
+  viewPriceDetails(row:any) {
+    this.logger.print( this.constructor.name + "=> ViewUser => row : ", row);
+    const dialogRef = this.dialog.open(ItemsComponent, {
+      data: {
+        ConcessionID: row.DefaultPriceConcessionID
+      },
+      autoFocus: false
+    });
+    dialogRef.afterClosed().subscribe(() => {
+      this.getItemDetails();
+    });
+  }
+
+  applyFilter(filterValue: any) {
+    this.dataSource.filter = filterValue.value.trim().toLowerCase();
   }
 }

@@ -1,0 +1,9 @@
+SELECT [dbo].[Manufacturers].[ManufactureName], Count(*) AS SoldCars FROM [dbo].[Manufacturers] 
+INNER JOIN [dbo].[Cars] 
+ON [dbo].[Cars].[ManufacturerID] = [dbo].[Manufacturers].[ManufacturerID]
+INNER JOIN [dbo].[Sales]
+ON [dbo].[Sales].[CarID] = [dbo].[Cars].[CarID]
+WHERE [dbo].[Sales].[SaleDate] 
+BETWEEN '2020-01-01' AND '2020-12-31'
+GROUP BY [dbo].[Manufacturers].[ManufactureName] 
+ORDER BY SoldCars DESC
