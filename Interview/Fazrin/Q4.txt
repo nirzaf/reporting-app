@@ -1,0 +1,6 @@
+
+SELECT [dbo].[Manufacturers].[ManufactureName], (MONTH([dbo].[Sales].[SaleDate])) AS SalesMonth FROM [dbo].[Manufacturers]
+INNER JOIN [dbo].[Cars]
+ON [dbo].[Cars].[ManufacturerID] = [dbo].[Manufacturers].[ManufacturerID]
+INNER JOIN [dbo].[Sales]
+ON [dbo].[Cars].[CarID] = [dbo].[Sales].[CarID]
