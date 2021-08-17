@@ -1,10 +1,12 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import { Component, OnInit, ViewChild} from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTable, MatTableDataSource} from '@angular/material/table';
-import {HttpClient} from "@angular/common/http";
-import {environment} from "../../environments/environment";
+import { HttpClient} from "@angular/common/http";
+import { environment } from "../../environments/environment";
 import { LogRegisterService } from '../shared/log-register.service';
+import {MatDialog} from "@angular/material/dialog";
+import {ItemsComponent} from "../items/items.component";
 
 export interface TableItem {
   Name : string;
@@ -28,7 +30,9 @@ export class TableComponent implements OnInit {
   displayedColumns = ['name', 'category', 'price', 'action'];
   dataSource = new MatTableDataSource<TableItem>(this.itemData);
 
-  constructor(private http:HttpClient, private logger:LogRegisterService) {}
+  constructor(private http:HttpClient,
+              private logger:LogRegisterService,
+              private dialog:MatDialog) {}
   ngOnInit(): void {
     this.getItemDetails();
   }
@@ -45,6 +49,18 @@ export class TableComponent implements OnInit {
       });
   }
 
+  viewPriceDetails(row:any) {
+    this.logger.print( this.constructor.name + "=> ViewUser => row : ", row);
+    const dialogRef = this.dialog.open(ItemsComponent, {
+      data: {
+        ConcessionID: row.DefaultPriceConcessionID
+      },
+      autoFocus: false
+    });
+    dialogRef.afterClosed().subscribe(() => {
+      this.getItemDetails();
+    });
+  }
 
   applyFilter(filterValue: any) {
     this.dataSource.filter = filterValue.value.trim().toLowerCase();
